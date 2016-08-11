@@ -105,6 +105,9 @@ BOARD_HARDWARE_CLASS += hardware/cyanogen/cmhw
 BOARD_USES_QCNE := true
 TARGET_LDPRELOAD := libNimsWrap.so
 
+# Dex PreOpt
+WITH_DEXPREOPT := true
+
 # Dex pre-opt to speed up initial boot
 ifeq ($(HOST_OS),linux)
   ifneq ($(TARGET_BUILD_VARIANT),eng)
