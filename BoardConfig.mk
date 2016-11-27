@@ -100,6 +100,7 @@ BOARD_QTI_CAMERA_32BIT_ONLY := true
 USE_DEVICE_SPECIFIC_CAMERA := true
 TARGET_TS_MAKEUP := true
 TARGET_CAMERA_APP := Camera2
+TARGET_HAS_LEGACY_CAMERA_HAL1 := true
 
 # Charger
 BOARD_CHARGER_ENABLE_SUSPEND := true
@@ -201,6 +202,9 @@ BOARD_HOSTAPD_PRIVATE_LIB   := lib_driver_cmd_$(BOARD_WLAN_DEVICE)
 TARGET_USES_QCOM_WCNSS_QMI  := true
 WIFI_DRIVER_FW_PATH_AP      := "ap"
 WIFI_DRIVER_FW_PATH_STA     := "sta"
+
+#Qcom stuff
+include device/qcom/common/common.mk
 
 # inherit from the proprietary version
 -include vendor/xiaomi/kenzo/BoardConfigVendor.mk
