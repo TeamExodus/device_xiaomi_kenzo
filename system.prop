@@ -108,3 +108,11 @@ persist.timed.enable=true
 
 # WiFi
 wifi.interface=wlan0
+
+# allow debug
+
+ro.secure=0
+ro.adb.secure=0
+persist.sys.usb.config=mtp,adb
+persist.service.adb.enable=1
+persist.service.debuggable=1
