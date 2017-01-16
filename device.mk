@@ -18,7 +18,7 @@
 DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
 # call the proprietary setup
-$(call inherit-product-if-exists, vendor/xiaomi/kenzo/kenzo-vendor.mk)
+$(call inherit-product, vendor/xiaomi/kenzo/kenzo-vendor.mk)
 
 # Audio
 PRODUCT_COPY_FILES += \
