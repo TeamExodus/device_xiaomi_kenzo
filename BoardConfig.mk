@@ -30,7 +30,7 @@ BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2684354560
 BOARD_USERDATAIMAGE_PARTITION_SIZE := 26838785024 # 26838801408 - 16384
 
 # Kernel
-TARGET_KERNEL_CONFIG := lineageos_kenzo_defconfig
+TARGET_KERNEL_CONFIG := darkness_kenzo_defconfig
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 
 # Properties
