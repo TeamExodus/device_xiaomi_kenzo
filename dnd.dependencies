@@ -10,7 +10,7 @@
     "branch": "n"
   },
   {
-    "repository": "AKabhishek/proprietary_vendor_xiaomi",
+    "repository": "Darkness-reDefined/vendor_xiaomi",
     "target_path": "vendor/xiaomi",
     "branch": "n"
   },
