@@ -19,7 +19,7 @@
 
 
 # Assert
-TARGET_OTA_ASSERT_DEVICE := kenzo
+TARGET_OTA_ASSERT_DEVICE := kenzo,kate
 
 # Bluetooth
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := device/xiaomi/kenzo/bluetooth
