@@ -18,6 +18,10 @@
 
 DEVICE_PATH := device/xiaomi/kenzo
 
+# Firmware
+ADD_RADIO_FILES := true
+TARGET_RELEASETOOLS_EXTENSIONS := $(DEVICE_PATH)/releasetools
+
 # Assert
 TARGET_OTA_ASSERT_DEVICE := kenzo
 
@@ -29,7 +33,7 @@ BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2684354560
 BOARD_USERDATAIMAGE_PARTITION_SIZE := 26838785024 # 26838801408 - 16384
 
 # Kernel
-TARGET_KERNEL_CONFIG := cyanogenmod_kenzo_defconfig
+TARGET_KERNEL_CONFIG := exodus_kenzo_defconfig
 
 # Properties
 TARGET_SYSTEM_PROP += $(DEVICE_PATH)/system.prop
