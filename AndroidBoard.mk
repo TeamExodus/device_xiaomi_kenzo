@@ -13,10 +13,6 @@ endif
 $(call add-radio-file,firmware/adspso.bin)
 #static_nvbk image
 $(call add-radio-file,firmware/cmnlib.mbn)
-$(call add-radio-file,firmware/config.bin)
-#emmc_appsboot image
-$(call add-radio-file,firmware/emmc_appsboot.mbn)
-
 #rpm image
 $(call add-radio-file,firmware/hyp.mbn)
 #sbl1 image
@@ -28,4 +24,3 @@ $(call add-radio-file,firmware/rpm.mbn)
 #tz version image
 $(call add-radio-file,firmware/sbl1.mbn)
 $(call add-radio-file,firmware/tz.mbn)
-#$(call add-radio-file,firmware/prog_emmc_firehose_8976_ddr.mbn)
