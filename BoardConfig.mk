@@ -19,6 +19,12 @@
 
 DEVICE_PATH := device/xiaomi/kenzo
 
+
+# Audio/media/display
+TARGET_QCOM_DISPLAY_VARIANT := caf-msm8956
+TARGET_QCOM_AUDIO_VARIANT := caf-msm8956
+TARGET_QCOM_MEDIA_VARIANT := caf-msm8956
+
 # Firmware
 ADD_RADIO_FILES := true
 TARGET_RELEASETOOLS_EXTENSIONS := $(DEVICE_PATH)/releasetools
