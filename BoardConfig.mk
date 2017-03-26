@@ -17,7 +17,6 @@
 # inherit from common msm8956-common
 -include device/xiaomi/msm8956-common/BoardConfigCommon.mk
 
-DEVICE_PATH := device/xiaomi/kenzo
 
 
 # Audio/media/display
