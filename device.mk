@@ -25,12 +25,6 @@ PRODUCT_COPY_FILES += \
     device/xiaomi/kenzo/audio/audio_platform_info_extcodec.xml:system/etc/audio_platform_info_extcodec.xml \
     device/xiaomi/kenzo/audio/mixer_paths.xml:system/etc/mixer_paths_wcd9326.xml
 
-# Camera
-PRODUCT_PACKAGES += \
-    camera.msm8952 \
-    libqomx_core \
-    libmm-qcamera
-
 # Input
 PRODUCT_COPY_FILES += \
     device/xiaomi/kenzo/idc/uinput-fpc.idc:system/usr/idc/uinput-fpc.idc
@@ -41,6 +35,20 @@ PRODUCT_COPY_FILES += \
     device/xiaomi/kenzo/keylayout/gpio-keys.kl:system/usr/keylayout/gpio-keys.kl \
     device/xiaomi/kenzo/keylayout/msm8976-tashalite-snd-card_Button_Jack.kl:system/usr/keylayout/msm8976-tashalite-snd-card_Button_Jack.kl \
     device/xiaomi/kenzo/keylayout/uinput-fpc.kl:system/usr/keylayout/uinput-fpc.kl
+
+# Libshims
+PRODUCT_PACKAGES += \
+    libshims_camera \
+    libshims_ims
+
+# SnapCamera
+PRODUCT_PACKAGES += \
+    SnapdragonCamera \
+    libcamera_shim
+
+# Ramdisk
+PRODUCT_PACKAGES += \
+    init.target.rc
 
 # Sensors
 PRODUCT_COPY_FILES += \
