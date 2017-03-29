@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2015, The Linux Foundataion. All rights reserved.
+/* Copyright (c) 2012-2016, The Linux Foundataion. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -196,9 +196,11 @@ public:
     static void * cbNotifyRoutine(void * data);
     static void releaseNotifications(void *data, void *user_data);
     static bool matchSnapshotNotifications(void *data, void *user_data);
+    static bool matchPreviewNotifications(void *data, void *user_data);
+#ifdef USE_MEDIA_EXTENSIONS
     static bool matchTimestampNotifications(void *data, void *user_data);
     virtual int32_t flushVideoNotifications();
-    static bool matchPreviewNotifications(void *data, void *user_data);
+#endif
     virtual int32_t flushPreviewNotifications();
 private:
 
@@ -772,6 +774,9 @@ private:
     //Gralloc memory details
     pthread_mutex_t mGrallocLock;
     uint8_t mEnqueuedBuffers;
+
+    //The offset between BOOTTIME and MONOTONIC timestamps
+    nsecs_t mBootToMonoTimestampOffset;
 };
 
 }; // namespace qcamera

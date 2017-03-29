@@ -296,15 +296,10 @@ int32_t mm_camera_open(mm_camera_obj_t *my_obj)
     do{
         n_try--;
         my_obj->ctrl_fd = open(dev_name, O_RDWR | O_NONBLOCK);
-        CDBG("%s:  ctrl_fd = %d, errno == %d", __func__, my_obj->ctrl_fd, errno);
-        if((my_obj->ctrl_fd >= 0) ||
-                (errno != EIO && errno != ETIMEDOUT && errno != ENODEV) ||
-                (n_try <= 0 )) {
-            CDBG_HIGH("%s:  opened, break out while loop", __func__);
-            if (my_obj->ctrl_fd < 0) {
-                    ALOGE("%s: Failed to open %s: %s(%d).", __func__, dev_name,
-                            strerror(-errno), errno);
-            }
+        l_errno = errno;
+        CDBG("%s:  ctrl_fd = %d, errno == %d", __func__, my_obj->ctrl_fd, l_errno);
+        if((my_obj->ctrl_fd >= 0) || (l_errno != EIO) || (n_try <= 0 )) {
+            CDBG("%s:  opened, break out while loop", __func__);
             break;
         }
         CDBG("%s:failed with I/O error retrying after %d milli-seconds",
@@ -2203,7 +2198,7 @@ int32_t mm_camera_reg_stream_buf_cb(mm_camera_obj_t *my_obj,
         mm_camera_stream_cb_type cb_type, void *userdata)
 {
     int rc = 0;
-    __unused mm_stream_t *stream = NULL;
+    mm_stream_t *stream = NULL;
     mm_stream_data_cb_t buf_cb;
     mm_channel_t * ch_obj =
             mm_camera_util_get_channel_by_handler(my_obj, ch_id);

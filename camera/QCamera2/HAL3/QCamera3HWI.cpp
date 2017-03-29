@@ -61,6 +61,8 @@ namespace qcamera {
 
 #define DATA_PTR(MEM_OBJ,INDEX) MEM_OBJ->getPtr( INDEX )
 
+#define TIME_SOURCE ANDROID_SENSOR_INFO_TIMESTAMP_SOURCE_UNKNOWN
+
 #define EMPTY_PIPELINE_DELAY 2
 #define PARTIAL_RESULT_COUNT 2
 #define FRAME_SKIP_DELAY     0
@@ -96,9 +98,9 @@ volatile uint32_t gCamHal3LogLevel = 0;
 extern uint8_t gNumCameraSessions;
 
 const QCamera3HardwareInterface::QCameraPropMap QCamera3HardwareInterface::CDS_MAP [] = {
-    {"on",  CAM_CDS_MODE_ON},
-    {"off", CAM_CDS_MODE_OFF},
-    {"auto",CAM_CDS_MODE_AUTO}
+    {"On",  CAM_CDS_MODE_ON},
+    {"Off", CAM_CDS_MODE_OFF},
+    {"Auto",CAM_CDS_MODE_AUTO}
 };
 
 const QCamera3HardwareInterface::QCameraMap<
@@ -326,7 +328,8 @@ QCamera3HardwareInterface::QCamera3HardwareInterface(uint32_t cameraId,
       mUpdateDebugLevel(false),
       mCallbacks(callbacks),
       mCaptureIntent(0),
-      mCacMode(0)
+      mCacMode(0),
+      mBootToMonoTimestampOffset(0)
 {
     getLogLevel();
     mCameraDevice.common.tag = HARDWARE_DEVICE_TAG;
@@ -394,7 +397,6 @@ QCamera3HardwareInterface::QCamera3HardwareInterface(uint32_t cameraId,
 QCamera3HardwareInterface::~QCamera3HardwareInterface()
 {
     CDBG("%s: E", __func__);
-    bool hasPendingBuffers = (mPendingBuffersMap.num_buffers > 0);
     /* We need to stop all streams before deleting any stream */
 
 
@@ -451,15 +453,6 @@ QCamera3HardwareInterface::~QCamera3HardwareInterface()
             mMetadataChannel = NULL;
         }
         if(!mFirstConfiguration){
-            clear_metadata_buffer(mParameters);
-
-            // Check if there is still pending buffer not yet returned.
-            if (hasPendingBuffers) {
-                uint8_t restart = TRUE;
-                ADD_SET_PARAM_ENTRY_TO_BATCH(mParameters, CAM_INTF_META_DAEMON_RESTART,
-                        restart);
-            }
-
             //send the last unconfigure
             cam_stream_size_info_t stream_config_info;
             memset(&stream_config_info, 0, sizeof(cam_stream_size_info_t));
@@ -468,7 +461,6 @@ QCamera3HardwareInterface::~QCamera3HardwareInterface()
             clear_metadata_buffer(mParameters);
             ADD_SET_PARAM_ENTRY_TO_BATCH(mParameters, CAM_INTF_META_STREAM_INFO,
                     stream_config_info);
-
             int rc = mCameraHandle->ops->set_parms(mCameraHandle->camera_handle, mParameters);
             if (rc < 0) {
                 ALOGE("%s: set_parms failed for unconfigure", __func__);
@@ -493,12 +485,6 @@ QCamera3HardwareInterface::~QCamera3HardwareInterface()
     pthread_cond_destroy(&mBuffersCond);
 
     pthread_mutex_destroy(&mMutex);
-
-    if (hasPendingBuffers) {
-        ALOGE("%s: Not all buffers were returned. Notified the camera daemon process to restart."
-                " Exiting here...", __func__);
-        exit(EXIT_FAILURE);
-    }
     CDBG("%s: X", __func__);
 }
 
@@ -659,6 +645,23 @@ int QCamera3HardwareInterface::openCamera()
         }
         pthread_mutex_unlock(&gCamLock);
     }
+
+    // Setprop to decide the time source (whether boottime or monotonic).
+    // By default, use monotonic time.
+    property_get("persist.camera.time.monotonic", value, "1");
+    mBootToMonoTimestampOffset = 0;
+    if (atoi(value) == 1) {
+        // if monotonic is set, then need to use time in monotonic.
+        // So, Measure the clock offset between BOOTTIME and MONOTONIC
+        // The clock domain source for ISP is BOOTTIME and
+        // for display is MONOTONIC
+        // The below offset is used to convert from clock domain of other subsystem
+        // (hardware composer) to that of camera. Assumption is that this
+        // offset won't change during the life cycle of the camera device. In other
+        // words, camera device shouldn't be open during CPU suspend.
+        mBootToMonoTimestampOffset = getBootToMonoTimeOffset();
+    }
+    CDBG_HIGH("mBootToMonoTimestampOffset = %lld", mBootToMonoTimestampOffset);
 
     return NO_ERROR;
 }
@@ -1140,10 +1143,10 @@ int QCamera3HardwareInterface::configureStreams(
         if ((HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED == newStream->format) &&
                 (newStream->usage & private_handle_t::PRIV_FLAGS_VIDEO_ENCODER)) {
             m_bIsVideo = true;
-            videoWidth = newStream->width;
-            videoHeight = newStream->height;
             if ((VIDEO_4K_WIDTH <= newStream->width) &&
                     (VIDEO_4K_HEIGHT <= newStream->height)) {
+                videoWidth = newStream->width;
+                videoHeight = newStream->height;
                 m_bIs4KVideo = true;
             }
             m_bEisSupportedSize = (newStream->width <= maxEisWidth) &&
@@ -1968,6 +1971,12 @@ void QCamera3HardwareInterface::handleMetadataWithLock(
     uint32_t frame_number, urgent_frame_number;
     int64_t capture_time;
 
+    // Convert Boottime from camera to Monotime.
+    uint8_t timestampSource = TIME_SOURCE;
+    nsecs_t timeOffset = mBootToMonoTimestampOffset;
+    if (ANDROID_SENSOR_INFO_TIMESTAMP_SOURCE_UNKNOWN != timestampSource)
+        timeOffset = 0;
+
     int32_t *p_frame_number_valid =
             POINTER_OF_META(CAM_INTF_META_FRAME_NUMBER_VALID, metadata);
     uint32_t *p_frame_number = POINTER_OF_META(CAM_INTF_META_FRAME_NUMBER, metadata);
@@ -1991,7 +2000,7 @@ void QCamera3HardwareInterface::handleMetadataWithLock(
     } else {
         frame_number_valid = *p_frame_number_valid;
         frame_number = *p_frame_number;
-        capture_time = *p_capture_time;
+        capture_time = *p_capture_time - timeOffset;
         urgent_frame_number_valid = *p_urgent_frame_number_valid;
         urgent_frame_number = *p_urgent_frame_number;
     }
@@ -3988,7 +3997,7 @@ QCamera3HardwareInterface::translateFromHalMetadata(
     IF_META_AVAILABLE(cam_color_correct_gains_t, colorCorrectionGains,
             CAM_INTF_META_COLOR_CORRECT_GAINS, metadata) {
         camMetadata.update(ANDROID_COLOR_CORRECTION_GAINS, colorCorrectionGains->gains,
-                CC_GAIN_MAX);
+                CC_GAINS_COUNT);
     }
 
     IF_META_AVAILABLE(cam_color_correct_matrix_t, colorCorrectionMatrix,
@@ -5310,10 +5319,7 @@ int QCamera3HardwareInterface::initStaticMetadata(uint32_t cameraId)
     staticInfo.update(ANDROID_TONEMAP_MAX_CURVE_POINTS,
                       &gCamCapability[cameraId]->max_tone_map_curve_points, 1);
 
-    // SOF timestamp is based on monotonic_boottime. So advertize REALTIME timesource
-    // REALTIME defined in HAL3 API is same as linux's CLOCK_BOOTTIME
-    // Ref: kernel/...../msm_isp_util.c: msm_isp_get_timestamp: get_monotonic_boottime
-    uint8_t timestampSource = ANDROID_SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME;
+    uint8_t timestampSource = TIME_SOURCE;
     staticInfo.update(ANDROID_SENSOR_INFO_TIMESTAMP_SOURCE,
             &timestampSource, 1);
 
@@ -6804,11 +6810,11 @@ camera_metadata_t* QCamera3HardwareInterface::translateCapabilityToMetadata(int 
     /* CDS default */
     char prop[PROPERTY_VALUE_MAX];
     memset(prop, 0, sizeof(prop));
-    property_get("persist.camera.CDS", prop, "off");
-    cam_cds_mode_type_t cds_mode = CAM_CDS_MODE_OFF;
+    property_get("persist.camera.CDS", prop, "Auto");
+    cam_cds_mode_type_t cds_mode = CAM_CDS_MODE_AUTO;
     cds_mode = lookupProp(CDS_MAP, METADATA_MAP_SIZE(CDS_MAP), prop);
     if (CAM_CDS_MODE_MAX == cds_mode) {
-        cds_mode = CAM_CDS_MODE_OFF;
+        cds_mode = CAM_CDS_MODE_AUTO;
     }
     //@note: force cds mode to be OFF when TNR is enabled.
     if (m_bTnrEnabled == true) {
@@ -7265,7 +7271,7 @@ int QCamera3HardwareInterface::translateToHalMetadata
 
     if (frame_settings.exists(ANDROID_COLOR_CORRECTION_GAINS)) {
         cam_color_correct_gains_t colorCorrectGains;
-        for (size_t i = 0; i < CC_GAIN_MAX; i++) {
+        for (size_t i = 0; i < CC_GAINS_COUNT; i++) {
             colorCorrectGains.gains[i] =
                     frame_settings.find(ANDROID_COLOR_CORRECTION_GAINS).data.f[i];
         }

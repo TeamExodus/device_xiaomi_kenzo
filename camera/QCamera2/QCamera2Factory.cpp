@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundataion. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundataion. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are
@@ -76,7 +76,7 @@ QCamera2Factory::QCamera2Factory()
     int isHAL3Enabled = atoi(prop);
 
     // Signifies whether system has to enable dual camera mode
-    snprintf(propDefault, PROPERTY_VALUE_MAX, "%d", isDualCamAvailable(isHAL3Enabled));
+    sprintf(propDefault, "%d", isDualCamAvailable(isHAL3Enabled));
     property_get("persist.camera.dual.camera", prop, propDefault);
     bDualCamera = atoi(prop);
     CDBG_HIGH("%s[%d]: dualCamera:%d ", __func__, __LINE__, bDualCamera);
@@ -353,7 +353,6 @@ int QCamera2Factory::cameraDeviceOpen(int camera_id,
                     struct hw_device_t **hw_device)
 {
     int rc = NO_ERROR;
-    int cameraretry = 0;
     if (camera_id < 0 || camera_id >= mNumOfCameras)
         return -ENODEV;
 
@@ -372,17 +371,7 @@ int QCamera2Factory::cameraDeviceOpen(int camera_id,
             ALOGE("Allocation of hardware interface failed");
             return NO_MEMORY;
         }
-
-        while (cameraretry < 3) {
-            rc = hw->openCamera(hw_device);
-            if (rc == NO_ERROR)
-                break;
-
-            cameraretry++;
-            ALOGV("%s: open failed - retrying attempt %d", __FUNCTION__, cameraretry);
-            sleep(2);
-        }
-
+        rc = hw->openCamera(hw_device);
         if (rc != 0) {
             delete hw;
         }
