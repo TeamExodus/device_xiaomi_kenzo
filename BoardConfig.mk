@@ -17,7 +17,7 @@
 # inherit from common msm8956-common
 -include device/xiaomi/msm8956-common/BoardConfigCommon.mk
 
-
+DEVICE_PATH := device/xiaomi/kenzo
 
 # Audio/media/display
 TARGET_QCOM_DISPLAY_VARIANT := caf-msm8956
@@ -32,7 +32,7 @@ TARGET_RELEASETOOLS_EXTENSIONS := $(DEVICE_PATH)/releasetools
 TARGET_OTA_ASSERT_DEVICE := kenzo,kate
 
 # Bluetooth
-BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := device/xiaomi/kenzo/bluetooth
+BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(DEVICE_PATH)/bluetooth
 
 # Filesystem
 BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2684354560
@@ -42,10 +42,10 @@ BOARD_USERDATAIMAGE_PARTITION_SIZE := 26838785024 # 26838801408 - 16384
 TARGET_KERNEL_CONFIG := exodus_kenzo_defconfig
 
 # Properties
-TARGET_SYSTEM_PROP += device/xiaomi/kenzo/system.prop
+TARGET_SYSTEM_PROP += $(DEVICE_PATH)/system.prop
 
 # Sepolicy
-BOARD_SEPOLICY_DIRS += device/xiaomi/kenzo/sepolicy
+BOARD_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy
 
 # inherit from the proprietary version
 -include vendor/xiaomi/kenzo/BoardConfigVendor.mk
