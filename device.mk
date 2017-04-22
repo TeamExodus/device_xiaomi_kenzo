@@ -19,7 +19,6 @@ DEVICE_PACKAGE_OVERLAYS += device/xiaomi/kenzo/overlay
 
 # call the proprietary setup
 $(call inherit-product, vendor/xiaomi/kenzo/kenzo-vendor.mk)
-
 # Audio
 PRODUCT_COPY_FILES += \
     device/xiaomi/kenzo/audio/audio_platform_info_extcodec.xml:system/etc/audio_platform_info_extcodec.xml \
