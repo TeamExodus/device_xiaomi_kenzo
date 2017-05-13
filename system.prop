@@ -14,3 +14,10 @@ persist.radio.force_on_dc=true
 persist.radio.redir_party_num=0
 persist.radio.start_ota_daemon=1
 persist.radio.add_power_save=1
+
+# Allow debug
+ro.secure=0
+ro.adb.secure=0
+persist.sys.usb.config=mtp,adb
+persist.service.adb.enable=1
+persist.service.debuggable=1
